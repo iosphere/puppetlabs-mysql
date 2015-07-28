@@ -16,8 +16,13 @@ DIR=<%= backupdir %>
 
 ##### STOP CONFIG ####################################################
 PATH=/usr/bin:/usr/sbin:/bin:/sbin
+#
+# Delete old backups, which are older than 1 day, if we have newer backups
+if [ "$(( $(date +"%s") - $(stat -c "%Y" /var/backup/LAST_BACKUP) ))" -lt "86400" ];
+then
+    find $DIR -mtime +1 -exec rm -f {} \;
+fi
 
-find $DIR -mtime +30 -exec rm -f {} \;
 mysqldump -u${USER} -p${PASS} --opt --flush-logs --single-transaction \
  --all-databases <% if backupcompress %>| bzcat -zc <% end %>> ${DIR}/mysql_backup_`date +%Y%m%d-%H%M%S`.sql<% if backupcompress %>.bz2<% end  %>
 
